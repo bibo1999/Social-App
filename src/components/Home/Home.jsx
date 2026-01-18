@@ -1,55 +1,95 @@
-import React, { useState } from "react";
-import style from "./Home.module.css";
-import { PostContext } from "../../Context/PostContext";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
-// import loader from "../../assets/loading screen.png";
 import FacebookLoader from "../FacbookLoader/FacbookLoader";
+import { TiDeleteOutline } from "react-icons/ti";
+import { UserData } from "../../Context/UserData";
+import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 
 export default function Home() {
   const [openCommentsPostId, setOpenCommentsPostId] = useState(null);
+  
+ 
+  const {Token} = useContext(UserData);
+  
+  const {register, handleSubmit, reset} = useForm({
+    defaultValues: {
+      body: '',
+      image: null,
+    },
+  });
+
+  async function onSubmitForm(values){
+    const form = new FormData();
+
+    form.append('body', values.body);
+    if (values?.image?.length>= 0) form.append('image', values.image[0]);
+
+    try {
+      const { data } = await axios.post(
+        `https://linked-posts.routemisr.com/posts`,
+        form,
+        {
+          headers: {
+            token: Token, 
+          },
+        },
+      );
+      if (data.message === 'success') {
+        toast.success('Post Added ...')
+        refetch(); 
+      }
+    } catch (error) {
+      toast.error('The Post is not Added!')
+      console.log(error);
+    } finally {
+      reset();
+    }
+  }
 
   function getAllPosts() {
-    return axios.get(`https://linked-posts.routemisr.com/posts?limit=50`, {
+    return axios.get(`https://linked-posts.routemisr.com/posts?limit=50&sort=-createdAt`, {
       headers: {
-        token: localStorage.getItem("token"),
+        token: Token, 
       },
     });
   }
 
-  let { error, data, isError, isLoading } = useQuery({
+  async function deletePost(postId) {
+    try {
+      const {data} = await axios.delete(
+        `https://linked-posts.routemisr.com/posts/${postId}`,
+        {
+          headers: {
+            token: Token, 
+          },
+        },
+      );
+
+      if (data.message === 'success'){
+        console.log(data);
+        refetch(); 
+      }
+    } catch (error){
+      console.log(error);
+    }
+  }
+
+  
+  let { error, data, isError, isLoading, refetch } = useQuery({
     queryKey: ["getPosts"],
     queryFn: getAllPosts,
-    // staleTime: 3000,
-    // retry: 3,
-    // retryDelay: 3000,
-    // refetchInterval: 4000,
-    // refetchIntervalInBackground: true,
     select: (data) => data?.data?.posts,
   });
-  console.log(data);
+
   const toggleComments = (postId) => {
     setOpenCommentsPostId(openCommentsPostId === postId ? null : postId);
   };
 
-  // console.log(data?.data?.posts);
-
   if (isLoading) {
     return <FacebookLoader />;
-    // <div className="fixed inset-0 z-[9999]">
-    //   <img src={loader} alt="Loading" className="w-full h-full object-cover" />
-    // </div>
-    //   <div className="loader-wrapper">
-    //     <div className="sk-chase">
-    //   <div className="sk-chase-dot"></div>
-    //   <div className="sk-chase-dot"></div>
-    //   <div className="sk-chase-dot"></div>
-    //   <div className="sk-chase-dot"></div>
-    //   <div className="sk-chase-dot"></div>
-    //   <div className="sk-chase-dot"></div>
-    // </div>
-    // </div>
   }
 
   if (isError) {
@@ -58,7 +98,26 @@ export default function Home() {
 
   return (
     <>
-      <>
+      <form onSubmit={handleSubmit(onSubmitForm)}>
+        <div className="flex flex-col items-center gap-4 mt-5 bg-gray-200">
+          <input
+            {...register('body')} 
+            className="bg-white rounded-md py-2 px-4 w-8/12"
+            type="text" 
+            placeholder="Enter Caption..."
+          />
+          <input
+            {...register('image')} 
+            className="bg-white rounded-md py-2 px-4 w-8/12 cursor-pointer"
+            type="file" 
+          />
+          <button className="bg-white rounded-md py-2 px-4 w-8/12 cursor-pointer">
+            Post
+          </button>
+        </div>
+      </form>
+
+      <div className="mt-5">
         <div className="max-w-2xl mx-auto py-4 px-2 sm:px-4 min-h-screen">
           {data.map((post) => {
             const commentsCount = post?.comments?.length || 0;
@@ -69,41 +128,38 @@ export default function Home() {
                 key={post.id}
                 className="bg-[#242526] rounded-lg shadow-lg mb-4 overflow-hidden"
               >
-                {/* Clickable Post Content */}
-                <Link to={`/postdetails/${post.id}`}>
-                  {/* Post Header */}
-                  <div className="p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <img
-                        src={post.user.photo}
-                        alt={post.user.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-white text-sm">
-                          {post.user.name}
-                        </h3>
-                        <p className="text-xs text-gray-400">
-                          {post.createdAt.slice(0, 10)}
-                        </p>
-                      </div>
-                      <button className="text-gray-400 hover:bg-gray-700 p-2 rounded-full transition-colors">
-                        <svg
-                          className="w-5 h-5"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                        </svg>
-                      </button>
+                {/* Post Header */}
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <img
+                      src={post.user.photo}
+                      alt={post.user.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-white text-sm">
+                        {post.user.name}
+                      </h3>
+                      <p className="text-xs text-gray-400">
+                        {post.createdAt.slice(0, 10)}
+                      </p>
                     </div>
-
-                    {/* Post Body */}
-                    <p className="text-gray-200 text-sm mb-3 whitespace-pre-wrap">
-                      {post.body}
-                    </p>
+                    <TiDeleteOutline 
+                      className="text-2xl text-white cursor-pointer" 
+                      onClick={() => {
+                        deletePost(post._id); 
+                      }}
+                    />
                   </div>
 
+                  {/* Post Body */}
+                  <p className="text-gray-200 text-sm mb-3 whitespace-pre-wrap">
+                    {post.body}
+                  </p>
+                </div>
+
+                {/* Clickable Post Content */}
+                <Link to={`/postdetails/${post.id}`}>
                   {/* Post Image */}
                   {post.image && (
                     <div className="w-full bg-black">
@@ -166,7 +222,7 @@ export default function Home() {
             );
           })}
         </div>
-      </>
+      </div>
     </>
   );
 }

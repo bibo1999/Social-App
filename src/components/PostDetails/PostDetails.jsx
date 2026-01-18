@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import style from "./PostDetails.module.css";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import FacebookLoader from "../FacbookLoader/FacbookLoader";
+import { IoIosArrowBack } from "react-icons/io";
+
 
 export default function PostDetails() {
   const [visibleComments, setVisibleComments] = useState(10); // Created state to store the visiblity of the comments
+  const navigate = useNavigate();
 
   let { id } = useParams();
   console.log(id);
@@ -51,6 +54,11 @@ export default function PostDetails() {
         <div className="flex flex-col lg:flex-row h-[calc(100vh-8rem)]">
           {/* Left Side - Image */}
           <div className="lg:w-3/5 bg-black flex items-center justify-center">
+          <IoIosArrowBack className="text-2xl cursor-pointer text-white"
+          onClick={() => {
+            navigate('/');
+          }}
+          />
             <img src={data.image} alt="Post" className="w-full h-full object-contain"/>
           </div>
 

@@ -12,20 +12,12 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from './../node_modules/@tanstack/react-query-devtools/src/index';
 import PostDetails from './components/PostDetails/PostDetails';
+import { router } from '../router';
+import { Toaster } from 'react-hot-toast';
 
 
 let query = new QueryClient()
 
-let x = createBrowserRouter([
-    { path: "", element: <Layout/>, children:[
-        { index:true , element:  <ProtectedRoute> <Home/> </ProtectedRoute>  },
-        { path: "profile", element:  <ProtectedRoute> <Profile/> </ProtectedRoute> },
-        { path: "postdetails/:id", element: <ProtectedRoute> <PostDetails/> </ProtectedRoute>  },
-        { path: "login", element: <Login/>},
-        { path: "register", element: <Register/>},
-        { path: "*", element: <Notfound/>},
-    ]}
-])
 
 
 
@@ -36,7 +28,8 @@ function App() {
 
     <UserDataProvider>
         <QueryClientProvider client={ query }>
-            <RouterProvider router={x}></RouterProvider>
+            <RouterProvider router={router}></RouterProvider>
+            <Toaster/>
             <ReactQueryDevtools/>
         </QueryClientProvider>
     </UserDataProvider>
