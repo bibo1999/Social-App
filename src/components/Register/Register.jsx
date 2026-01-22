@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import style from './Register.module.css'
-import { useForm } from 'react-hook-form';
-import z from "zod";
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import z from "zod";
 
 export default function Register() {
   const [isLoading, setisLoading] = useState(false);
